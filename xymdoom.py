@@ -2,6 +2,7 @@ import time
 import os
 import subprocess
 import keyboard
+import re
 
 def send_keystroke(key):
     keyboard.press(key)
@@ -9,10 +10,11 @@ def send_keystroke(key):
     keyboard.release(key)
 
 def process_line(line):
-    if line == "Coin collected":
-        print("Detected coin")
+    match = re.match(r"Collected (\d+) coins", line)
+    if match:
+        count = int(match.group(1))
+        print(f"Requesting {count} coins")
         send_keystroke('J')
-        send_keystroke('K')
 
 def monitor_log_file(file_path):
     try:
