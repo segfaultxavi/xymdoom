@@ -1,0 +1,5 @@
+addkeysection "XYMDoom" XYMControls
+addmenukey "XYM wrapper signal 0" +user1
+addmenukey "XYM wrapper signal 1" +user2
+defaultbind J +user1
+defaultbind K +user2

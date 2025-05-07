@@ -4,6 +4,9 @@ class XYMCoin : Inventory
   // Parent's Amount are unconfirmed (incoming).
   int mAmountConfirmed;
 
+  // Wrapper communication.
+  bool signals[2];
+
   Default {
     Inventory.MaxAmount 999;
     Inventory.PickupMessage "You got a coin!";
@@ -29,6 +32,21 @@ class XYMCoin : Inventory
   override bool TryPickup(in out actor toucher) {
     Console.PrintfEx(PRINT_LOG, "Coin collected");
     return super.TryPickup(toucher);
+  }
+
+  override void Tick() {
+    if (owner && owner.player) {
+      let buttons = owner.player.cmd.buttons;
+      if ((buttons & BT_USER1) && !signals[0]) {
+        console.printf("Wrapper signal 0");
+      }
+      if ((buttons & BT_USER2) && !signals[1]) {
+        console.printf("Wrapper signal 1");
+      }
+      signals[0] = (buttons & BT_USER1);
+      signals[1] = (buttons & BT_USER2);
+    }
+    super.Tick();
   }
 
   States

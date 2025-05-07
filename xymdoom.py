@@ -3,12 +3,16 @@ import os
 import subprocess
 import keyboard
 
+def send_keystroke(key):
+    keyboard.press(key)
+    time.sleep(0.050)
+    keyboard.release(key)
+
 def process_line(line):
     if line == "Coin collected":
         print("Detected coin")
-        keyboard.press(' ')
-        time.sleep(0.1)
-        keyboard.release(' ')
+        send_keystroke('J')
+        send_keystroke('K')
 
 def monitor_log_file(file_path):
     try:
