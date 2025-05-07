@@ -143,7 +143,7 @@ if __name__ == "__main__":
         process = subprocess.Popen([
             "../gzdoom.exe",
             "-iwad", "../../DOOM 2/doom2/DOOM2.WAD",
-            "-file", "xymres/", "wads/xymdoom.wad",
+            "-file", "xymres/", "wads/MAP01.wad",
             "+map", "MAP01"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for the log file to be created
