@@ -1,3 +1,7 @@
 DoomEdNums {
   20001 = CCoin
 }
+
+GameInfo {
+    StatusBarClass = "XYMHUD"
+}
