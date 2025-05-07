@@ -30,6 +30,7 @@ class XYMCoin : Inventory
   }
 
   override bool TryPickup(in out actor toucher) {
+    // Message the wrapper
     Console.PrintfEx(PRINT_LOG, "Coin collected");
     return super.TryPickup(toucher);
   }
@@ -37,8 +38,12 @@ class XYMCoin : Inventory
   override void Tick() {
     if (owner && owner.player) {
       let buttons = owner.player.cmd.buttons;
+      // Signals back from the wrapper
       if ((buttons & BT_USER1) && !signals[0]) {
-        console.printf("Wrapper signal 0");
+        console.printf("Wrapper signal 0: Confirming %d coins. Balance %d -> %d",
+        Amount, mAmountConfirmed, mAmountConfirmed + Amount);
+        mAmountConfirmed += Amount;
+        Amount = 0;
       }
       if ((buttons & BT_USER2) && !signals[1]) {
         console.printf("Wrapper signal 1");
