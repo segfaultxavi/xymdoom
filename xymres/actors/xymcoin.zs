@@ -4,8 +4,7 @@ class XYMCoin : Inventory
   // Parent's Amount are unconfirmed (incoming).
   int mAmountConfirmed;
 
-  Default
-  {
+  Default {
     Inventory.MaxAmount 999;
     Inventory.PickupMessage "You got a coin!";
     +NOGRAVITY
@@ -27,8 +26,7 @@ class XYMCoin : Inventory
     return true;
   }
 
-  override bool TryPickup(in out actor toucher)
-  {
+  override bool TryPickup(in out actor toucher) {
     Console.PrintfEx(PRINT_LOG, "Coin collected");
     return super.TryPickup(toucher);
   }

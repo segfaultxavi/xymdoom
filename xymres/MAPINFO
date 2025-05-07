@@ -3,5 +3,5 @@ DoomEdNums {
 }
 
 GameInfo {
-    StatusBarClass = "XYMHUD"
+  StatusBarClass = "XYMHUD"
 }
