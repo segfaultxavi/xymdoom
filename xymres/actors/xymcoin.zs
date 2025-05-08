@@ -3,18 +3,17 @@ class XYMCoin : Inventory
   // These are confirmed coins.
   // Parent class' Amount are unconfirmed (incoming).
   int mAmountConfirmed;
+  // To avoid flooding the console
+  int mLastPrintTime;
+  // Ticks before requesting confirmation
+  int mConfirmationDelay;
+  // Some incoming coins are being confirmed. Can't pick any more up.
+  bool mConfirming;
 
   // Wrapper communication.
   bool mSignals[2];
-
-  // To avoid flooding the console
-  int mLastPrintTime;
-
-  // Ticks before requesting confirmation
-  int mConfirmationDelay;
-
-  // Some incoming coins are being confirmed. Can't pick any more up.
-  bool mConfirming;
+  int mIncomingValue;
+  int mIncomingCount;
 
   Default {
     Inventory.MaxAmount 999;
@@ -45,11 +44,27 @@ class XYMCoin : Inventory
 
   override bool TryPickup(in out actor toucher) {
     let xymcoin = XYMCoin(toucher.FindInventory("XYMCoin"));
-    if (xymcoin == null)
-      mConfirmationDelay = 100; // 3.5 seconds
-    else
-      xymcoin.mConfirmationDelay = 100;
+    if (xymcoin == null) {
+      // This is the first collected coin, which will become the inventory manager
+      xymcoin = self;
+    }
+    // Reset the inventory manager coin timer
+    xymcoin.mConfirmationDelay = 100;
     return super.TryPickup(toucher);
+  }
+
+  void HandleComms(int buttons) {
+    // Signals from the wrapper
+    if ((buttons & BT_USER1) && !mSignals[0]) {
+      mAmountConfirmed += Amount;
+      Amount = 0;
+      mConfirming = false;
+    }
+    if ((buttons & BT_USER2) && !mSignals[1]) {
+      console.printf("Wrapper signal 1");
+    }
+    mSignals[0] = (buttons & BT_USER1);
+    mSignals[1] = (buttons & BT_USER2);
   }
 
   override void Tick() {
@@ -64,18 +79,7 @@ class XYMCoin : Inventory
     }
     // Wrapper communication
     if (owner && owner.player) {
-      let buttons = owner.player.cmd.buttons;
-      // Signals back from the wrapper
-      if ((buttons & BT_USER1) && !mSignals[0]) {
-        mAmountConfirmed += Amount;
-        Amount = 0;
-        mConfirming = false;
-      }
-      if ((buttons & BT_USER2) && !mSignals[1]) {
-        console.printf("Wrapper signal 1");
-      }
-      mSignals[0] = (buttons & BT_USER1);
-      mSignals[1] = (buttons & BT_USER2);
+      HandleComms(owner.player.cmd.buttons);
     }
     super.Tick();
   }
