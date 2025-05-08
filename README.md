@@ -23,8 +23,14 @@ Lots and lots of room for improvement. For example:
     GZDoom and the doom2.wad, the private key of the treasury (where did you think
     the coins come from?), and the address of the wallet that receives them.
 
+* Show current wallet balance and update it periodically.
+
+* Add doors which open by paying.
+
+* Enemies drop coins upon dying.
+
 * A private key is embedded in the code and published on GitHub.
     This is not a recommended best practice.
     It's test currency anyway.
 
-Don't take this experiment too seriously :)
+Please don't take this code too seriously :)
