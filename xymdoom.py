@@ -108,6 +108,12 @@ def send_keystroke(key):
     keyboard.press(key)
     time.sleep(0.050)
     keyboard.release(key)
+    time.sleep(0.050)
+
+def send_int(value, count):
+    while count:
+        count -= 1
+        send_keystroke('K' if ((value >> count) & 1) else 'J')
 
 def process_line(line):
     match = re.match(r"Collected (\d+) coins", line)
@@ -115,7 +121,7 @@ def process_line(line):
         count = int(match.group(1))
         print(f"Requesting {count} coins")
         send_xym(count)
-        send_keystroke('J')
+        send_int(0, 4) # Send confirmation command
 
 def monitor_log_file(file_path):
     try:

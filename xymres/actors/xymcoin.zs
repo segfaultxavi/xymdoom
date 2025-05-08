@@ -1,5 +1,14 @@
 class XYMCoin : Inventory
 {
+  enum  EXYMState : int {
+    State_Command,
+    State_Balance
+  };
+
+  // Command: int4
+  // 0000: Confirm incoming coins
+  // 0001: Balance update. Parameters: balance (int8)
+
   // These are confirmed coins.
   // Parent class' Amount are unconfirmed (incoming).
   int mAmountConfirmed;
@@ -14,6 +23,7 @@ class XYMCoin : Inventory
   bool mSignals[2];
   int mIncomingValue;
   int mIncomingCount;
+  EXYMState mState;
 
   Default {
     Inventory.MaxAmount 999;
@@ -29,6 +39,9 @@ class XYMCoin : Inventory
     mLastPrintTime = -1000;
     mConfirmationDelay = 0;
     mConfirming = false;
+    mState = State_Command;
+    mIncomingValue = 0;
+    mIncomingCount = 0;
   }
 
   override bool CanPickup(Actor toucher) {
@@ -53,18 +66,47 @@ class XYMCoin : Inventory
     return super.TryPickup(toucher);
   }
 
+  void ReceiveBit(int value) {
+    mIncomingValue = mIncomingValue * 2 + value;
+    mIncomingCount++;
+    Console.Printf("Got bit %d. State %d inValue %d inCount %d", value, mState, mIncomingValue, mIncomingCount);
+  }
+
+  void HandleCommand(int command) {
+    Console.Printf("Received command %d", command);
+    switch (command) {
+      case 0:
+        mAmountConfirmed += Amount;
+        Amount = 0;
+        mConfirming = false;
+        mState = State_Command;
+        mIncomingValue = 0;
+        mIncomingCount = 0;
+        break;
+    }
+  }
+
   void HandleComms(int buttons) {
     // Signals from the wrapper
     if ((buttons & BT_USER1) && !mSignals[0]) {
-      mAmountConfirmed += Amount;
-      Amount = 0;
-      mConfirming = false;
+      ReceiveBit(0);
     }
     if ((buttons & BT_USER2) && !mSignals[1]) {
-      console.printf("Wrapper signal 1");
+      ReceiveBit(1);
     }
-    mSignals[0] = (buttons & BT_USER1);
-    mSignals[1] = (buttons & BT_USER2);
+    mSignals[0] = buttons & BT_USER1;
+    mSignals[1] = buttons & BT_USER2;
+
+    // Process received bits
+    switch (mState) {
+      case State_Command:
+        if (mIncomingCount == 4) {
+          HandleCommand(mIncomingValue);
+        }
+        break;
+      case State_Balance:
+        break;
+    }
   }
 
   override void Tick() {
