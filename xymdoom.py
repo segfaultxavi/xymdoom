@@ -4,6 +4,7 @@ import subprocess
 import keyboard
 import re
 import json
+import math
 import urllib.request
 from dotenv import load_dotenv
 
@@ -104,6 +105,16 @@ def send_xym(amount):
     else:
         print('Confirmation took too long.')
 
+def fetch_balance():
+    balance_path = f'/accounts/{PLAYER_ADDRESS}'
+    print(f'Fetching player balance from {balance_path}')
+    with urllib.request.urlopen(f'{NODE_URL}{balance_path}') as response:
+        response_json = json.loads(response.read().decode())
+        balance = int(response_json['account']['mosaics'][0]['amount'])
+        balance = math.trunc(balance / 1_000_000)
+        print(f'  Balance: {balance} XYM')
+        return balance
+
 def send_keystroke(key):
     keyboard.press(key)
     time.sleep(0.050)
@@ -115,13 +126,23 @@ def send_int(value, count):
         count -= 1
         send_keystroke('K' if ((value >> count) & 1) else 'J')
 
+def send_balance():
+    balance = fetch_balance()
+    send_int(1, 4)
+    send_int(balance, 8)
+
 def process_line(line):
+    if line == "Balance request":
+        print("Balance requested")
+        send_balance()
+        return
     match = re.match(r"Collected (\d+) coins", line)
     if match:
         count = int(match.group(1))
         print(f"Requesting {count} coins")
         send_xym(count)
         send_int(0, 4) # Send confirmation command
+        return
 
 def monitor_log_file(file_path):
     try:

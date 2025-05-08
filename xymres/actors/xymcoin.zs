@@ -1,13 +1,20 @@
 class XYMCoin : Inventory
 {
   enum  EXYMState : int {
+    // Receiving or waiting for a command
     State_Command,
+    // Receiving or waiting for a balance
     State_Balance
   };
 
   // Command: int4
   // 0000: Confirm incoming coins
   // 0001: Balance update. Parameters: balance (int8)
+
+  enum EXYMCommand : int {
+    Command_Confirm = 0,
+    Command_Balance = 1
+  };
 
   // These are confirmed coins.
   // Parent class' Amount are unconfirmed (incoming).
@@ -18,6 +25,8 @@ class XYMCoin : Inventory
   int mConfirmationDelay;
   // Some incoming coins are being confirmed. Can't pick any more up.
   bool mConfirming;
+  // Periodically request a balance update
+  int mBalanceUpdateDelay;
 
   // Wrapper communication.
   bool mSignals[2];
@@ -42,6 +51,7 @@ class XYMCoin : Inventory
     mState = State_Command;
     mIncomingValue = 0;
     mIncomingCount = 0;
+    mBalanceUpdateDelay = 0;
   }
 
   override bool CanPickup(Actor toucher) {
@@ -61,28 +71,30 @@ class XYMCoin : Inventory
       // This is the first collected coin, which will become the inventory manager
       xymcoin = self;
     }
-    // Reset the inventory manager coin timer
-    xymcoin.mConfirmationDelay = 100;
+    // Reset the inventory manager coin timer, if there's anything to request
+    if (Amount > 0)
+      xymcoin.mConfirmationDelay = 100;
     return super.TryPickup(toucher);
   }
 
   void ReceiveBit(int value) {
     mIncomingValue = mIncomingValue * 2 + value;
     mIncomingCount++;
-    Console.Printf("Got bit %d. State %d inValue %d inCount %d", value, mState, mIncomingValue, mIncomingCount);
+    //Console.Printf("Got bit %d. State %d inValue %d inCount %d", value, mState, mIncomingValue, mIncomingCount);
   }
 
   void HandleCommand(int command) {
-    Console.Printf("Received command %d", command);
+    Console.PrintfEx(PRINT_LOG, "Received command %d", command);
     switch (command) {
-      case 0:
+      case Command_Confirm:
         mAmountConfirmed += Amount;
         Amount = 0;
         mConfirming = false;
         mState = State_Command;
-        mIncomingValue = 0;
-        mIncomingCount = 0;
         A_StartSound ("dingin", CHAN_AUTO);
+        break;
+      case Command_Balance:
+        mState = State_Balance;
         break;
     }
   }
@@ -102,15 +114,31 @@ class XYMCoin : Inventory
     switch (mState) {
       case State_Command:
         if (mIncomingCount == 4) {
-          HandleCommand(mIncomingValue);
+          let command = mIncomingValue;
+          mIncomingValue = 0;
+          mIncomingCount = 0;
+          HandleCommand(command);
         }
         break;
       case State_Balance:
+        if (mIncomingCount == 8) {
+          mAmountConfirmed = mIncomingValue;
+          Console.PrintfEx(PRINT_LOG, "Balance is %d", mAmountConfirmed);
+          mIncomingValue = 0;
+          mIncomingCount = 0;
+          mState = State_Command;
+        }
         break;
     }
   }
 
   override void Tick() {
+    // Only the inventory manager ticks
+    if (!owner || !owner.player) {
+      super.Tick();
+      return;
+    }
+
     // Request confirmations
     if (!mConfirming && mConfirmationDelay > 0) {
       mConfirmationDelay--;
@@ -121,10 +149,17 @@ class XYMCoin : Inventory
         mConfirming = true;
       }
     }
-    // Wrapper communication
-    if (owner && owner.player) {
-      HandleComms(owner.player.cmd.buttons);
+
+    // Periodic balance requests, in case it is updated externally
+    mBalanceUpdateDelay--;
+    if (mBalanceUpdateDelay < 0) {
+      mBalanceUpdateDelay = 850; // Every 30s
+      Console.PrintfEx(PRINT_LOG, "Balance request");
     }
+
+    // Wrapper communication
+    HandleComms(owner.player.cmd.buttons);
+
     super.Tick();
   }
 
