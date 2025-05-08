@@ -5,6 +5,7 @@ import keyboard
 import re
 import json
 import urllib.request
+from dotenv import load_dotenv
 
 from symbolchain.CryptoTypes import PrivateKey
 from symbolchain.facade.SymbolFacade import SymbolFacade
@@ -12,11 +13,12 @@ from symbolchain.symbol.Network import NetworkTimestamp
 from symbolchain.symbol.IdGenerator import generate_mosaic_alias_id
 from symbolchain.sc import Amount
 
-NODE_URL = 'https://001-sai-dual.symboltest.net:3001'
+load_dotenv()
 
-TREASURY_PRIVATE_KEY = (
-    'EDB671EB741BD676969D8A035271D1EE5E75DF33278083D877F23615EB839FEC')
+NODE_URL = os.getenv('NODE_URL')
+TREASURY_PRIVATE_KEY = os.getenv('TREASURY_PRIVATE_KEY')
 treasury_key_pair = SymbolFacade.KeyPair(PrivateKey(TREASURY_PRIVATE_KEY))
+PLAYER_ADDRESS = os.getenv('PLAYER_ADDRESS')
 
 facade = SymbolFacade('testnet')
 
@@ -53,7 +55,7 @@ def send_xym(amount):
         'type': 'transfer_transaction_v1',
         'signer_public_key': treasury_key_pair.public_key,
         'deadline': timestamp.add_hours(2).timestamp,
-        'recipient_address': 'TBVXAZFUCYAPCWRSDOU7LRDLPHZIZLNWC6XTFZA',
+        'recipient_address': PLAYER_ADDRESS,
         'mosaics': [{
             'mosaic_id': generate_mosaic_alias_id('symbol.xym'),
             'amount': amount * 1_000_000
@@ -141,10 +143,10 @@ if __name__ == "__main__":
         # Launch a new process in a portable way
         print("Launching Doom")
         process = subprocess.Popen([
-            "../gzdoom.exe",
-            "-iwad", "../../DOOM 2/doom2/DOOM2.WAD",
-            "-file", "xymres/", "wads/MAP01.wad",
-            "+map", "MAP01"],
+            os.getenv('GZDOOM_BINARY'),
+            "-iwad", os.getenv('DOOM2_WAD'),
+            "-file", "xymres/", os.getenv('MAP_WAD'),
+            "+map", os.getenv('MAP_NAME')],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         # Wait for the log file to be created
         print("Waiting for log file")
