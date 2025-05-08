@@ -82,6 +82,7 @@ class XYMCoin : Inventory
         mState = State_Command;
         mIncomingValue = 0;
         mIncomingCount = 0;
+        A_StartSound ("dingin", CHAN_AUTO);
         break;
     }
   }
@@ -116,6 +117,7 @@ class XYMCoin : Inventory
       if (mConfirmationDelay == 0) {
         // Message the wrapper
         Console.PrintfEx(PRINT_LOG, "Collected %d coins", Amount);
+        A_StartSound ("dingout", CHAN_AUTO);
         mConfirming = true;
       }
     }
