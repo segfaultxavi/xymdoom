@@ -5,8 +5,9 @@ Whenever you pick up an in-game XYM coin, your wallet receives a test XYM!
 
 ## Installation
 
-Install GZDoom and Doom2. Then update [xymdoom.py](./xymdoom.py#L143) to point to
-wherever you installed them.
+* Install Python [`requirements.txt`](./requirements.txt).
+* Install [GZDoom](https://zdoom.org/downloads) and Doom2.
+* Then update [`xymdoom.py`](./xymdoom.py#L143) to point to wherever you installed them.
 
 ## Running
 
