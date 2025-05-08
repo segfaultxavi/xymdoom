@@ -13,7 +13,6 @@ class XYMCoin : Inventory
   Default {
     Inventory.MaxAmount 999;
     Inventory.PickupMessage "You got a coin!";
-    +NOGRAVITY
     +FLOATBOB
     Scale 0.25;
     FloatBobStrength 0.25;

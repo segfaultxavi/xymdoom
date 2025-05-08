@@ -27,8 +27,6 @@ Lots and lots of room for improvement. For example:
 
 * Add doors which open by paying.
 
-* Enemies drop coins upon dying.
-
 * A private key is embedded in the code and published on GitHub.
     This is not a recommended best practice.
     It's test currency anyway.
