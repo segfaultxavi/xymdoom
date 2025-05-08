@@ -1,21 +1,24 @@
 # XYMDoom
 
-Experiments with Doom and the Symbol blockchain.
+Experiments with Doom and the Symbol blockchain:
+Whenever you pick up an in-game XYM coin, your wallet receives a test XYM!
+
+## Installation
 
 Install GZDoom and Doom2. Then update [xymdoom.py](./xymdoom.py#L143) to point to
 wherever you installed them.
 
-Then run `python xymdoom.py` from the root folder.
-It will launch GZDoom and monitor it until you exit the game.
+## Running
 
-**Whenever you pick up an in-game XYM coin, your wallet receives a test XYM!**
+Then run `python xymdoom.py` from the root folder.
+It will launch GZDoom, monitor its log file, and send keystrokes to it until you exit the game.
+
+**Do not move focus away from GZDoom or it will stop receiving commands!**
+
+## Next Steps
 
 Extremely preliminary! Only Windows supported.
 Lots and lots of room for improvement. For example:
-
-* You need to wait until a coin is confirmed before you can pick up the next one.
-
-    Coins could be batched, and have multiple transactions in-flight.
 
 * Supporting other operating systems should be easy, since this is just a Python script.
 
