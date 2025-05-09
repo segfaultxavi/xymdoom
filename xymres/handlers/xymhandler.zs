@@ -30,6 +30,7 @@ class XYMEventHandler : EventHandler {
         return;
       }
       activator.A_Log("Transaction in progress...");
+      line.sidedef[0].SetTexture(Side.Top, line.sidedef[0].GetTexture(Side.Bottom));
       Console.PrintfEx(PRINT_LOG, "Pay %d coins to open door %d",
         line.args[2], line.backsector.GetTag(0));
       xymcoin.mAmountConfirmed -= price;
