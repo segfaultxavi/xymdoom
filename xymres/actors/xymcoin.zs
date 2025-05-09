@@ -6,18 +6,16 @@ class XYMCoin : Inventory
     // Receiving or waiting for a balance
     State_Balance,
     // Receiving or waiting for a door id
-    State_Door_Id
+    State_Door_Id,
+    // Receiving or waiting for amount of coins to return
+    State_Amount_Return,
   };
 
-  // Command: int4
-  // 0000: Confirm incoming coins
-  // 0001: Balance update. Parameters: balance (int8)
-  // 0002: Open door. Parameters: door id (int8)
-
   enum EXYMCommand : int {
-    Command_Confirm = 0,
-    Command_Balance = 1,
-    Command_Open_Door = 2,
+    Command_Confirm = 0, // Confirm incoming coins
+    Command_Balance = 1, // Balance update. Parameters: balance (int8)
+    Command_Open_Door = 2, // Open door. Parameters: door id (int8)
+    Command_Return_Coins = 3 // Return coins to map. Parameters: amount (int8)
   };
 
   // These are confirmed coins.
@@ -103,6 +101,9 @@ class XYMCoin : Inventory
       case Command_Open_Door:
         mState = State_Door_Id;
         break;
+      case Command_Return_Coins:
+        mState = State_Amount_Return;
+        break;
     }
   }
 
@@ -142,6 +143,26 @@ class XYMCoin : Inventory
           Console.Printf("Opening door");
           // Call script 2 which will open the door (and leave it open)
           ACS_Execute(2, 0, door_id, 0, 0);
+          mIncomingValue = 0;
+          mIncomingCount = 0;
+          mState = State_Command;
+        }
+        break;
+      case State_Amount_Return:
+        if (mIncomingCount == 8) {
+          // Transaction failed, return coins to the map
+          Console.Printf("Transaction error!");
+          for (int i=0; i<mIncomingValue; i++) {
+            let hor = (owner.player.mo.Angle + frandom(-45, 45)).ToVector(owner.player.mo.Pitch);
+            Vector3 vel = (hor.x, hor.y, 1);
+            vel *= 4;
+            Actor coin = Actor.Spawn("XYMCoin", owner.player.mo.pos + vel);
+            if (coin != null) {
+              coin.vel = vel;
+            }
+          }
+          Amount = 0;
+          mConfirming = false;
           mIncomingValue = 0;
           mIncomingCount = 0;
           mState = State_Command;

@@ -148,17 +148,21 @@ def process_line(line):
     if match:
         count = int(match.group(1))
         print(f"Requesting {count} coins")
-        send_xym_to_player(count)
-        send_int(0, 4) # Send confirmation command
+        if send_xym_to_player(count):
+            send_int(0, 4) # Send confirmation command
+        else:
+            send_int(3, 4) # Send command to return coins to map
+            send_int(count, 8)
         return
     match = re.match(r"Pay (\d+) coins to open door (\d+)", line)
     if match:
         count = int(match.group(1))
         door_id = int(match.group(2))
         print(f"Paying {count} coins to open door {door_id}")
-        send_xym_to_treasury(count)
-        send_int(2, 4) # Send confirmation command
-        send_int(door_id, 8)
+        if send_xym_to_treasury(count):
+            send_int(2, 4) # Send confirmation command
+            send_int(door_id, 8)
+        # If it fails, the balance refresh will update the player's balance
         return
 
 def monitor_log_file(file_path):

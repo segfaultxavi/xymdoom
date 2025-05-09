@@ -42,10 +42,6 @@ Lots and lots of room for improvement. For example:
 
 * Supporting other operating systems should be easy, since this is just a Python script.
 
-* Add doors which open by paying.
-
-* Handle failed transactions, for example, due to insufficient funds.
-
 * A private key is published on GitHub. This is not a recommended best practice.
     It's test currency anyway.
 
