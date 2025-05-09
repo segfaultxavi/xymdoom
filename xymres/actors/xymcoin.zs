@@ -4,16 +4,20 @@ class XYMCoin : Inventory
     // Receiving or waiting for a command
     State_Command,
     // Receiving or waiting for a balance
-    State_Balance
+    State_Balance,
+    // Receiving or waiting for a door id
+    State_Door_Id
   };
 
   // Command: int4
   // 0000: Confirm incoming coins
   // 0001: Balance update. Parameters: balance (int8)
+  // 0002: Open door. Parameters: door id (int8)
 
   enum EXYMCommand : int {
     Command_Confirm = 0,
-    Command_Balance = 1
+    Command_Balance = 1,
+    Command_Open_Door = 2,
   };
 
   // These are confirmed coins.
@@ -96,6 +100,9 @@ class XYMCoin : Inventory
       case Command_Balance:
         mState = State_Balance;
         break;
+      case Command_Open_Door:
+        mState = State_Door_Id;
+        break;
     }
   }
 
@@ -124,6 +131,17 @@ class XYMCoin : Inventory
         if (mIncomingCount == 8) {
           mAmountConfirmed = mIncomingValue;
           Console.PrintfEx(PRINT_LOG, "Balance is %d", mAmountConfirmed);
+          mIncomingValue = 0;
+          mIncomingCount = 0;
+          mState = State_Command;
+        }
+        break;
+      case State_Door_Id:
+        if (mIncomingCount == 8) {
+          let door_id = mIncomingValue;
+          Console.Printf("Opening door");
+          // Call script 2 which will open the door (and leave it open)
+          ACS_Execute(2, 0, door_id, 0, 0);
           mIncomingValue = 0;
           mIncomingCount = 0;
           mState = State_Command;

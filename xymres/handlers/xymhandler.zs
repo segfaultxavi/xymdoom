@@ -29,8 +29,10 @@ class XYMEventHandler : EventHandler {
         activator.A_Log("Insufficient balance");
         return;
       }
-      // Call script 2 which will open the door (and leave it open)
-      ACS_Execute(2, 0, line.backsector.GetTag(0), 0, 0);
+      activator.A_Log("Transaction in progress...");
+      Console.PrintfEx(PRINT_LOG, "Pay %d coins to open door %d",
+        line.args[2], line.backsector.GetTag(0));
+      xymcoin.mAmountConfirmed -= price;
     }
   }
 }

@@ -19,7 +19,8 @@ load_dotenv()
 NODE_URL = os.getenv('NODE_URL')
 TREASURY_PRIVATE_KEY = os.getenv('TREASURY_PRIVATE_KEY')
 treasury_key_pair = SymbolFacade.KeyPair(PrivateKey(TREASURY_PRIVATE_KEY))
-PLAYER_ADDRESS = os.getenv('PLAYER_ADDRESS')
+PLAYER_PRIVATE_KEY = os.getenv('PLAYER_PRIVATE_KEY')
+player_key_pair = SymbolFacade.KeyPair(PrivateKey(PLAYER_PRIVATE_KEY))
 
 facade = SymbolFacade('testnet')
 
@@ -48,15 +49,15 @@ def fetch_config():
         fee_mult = max(median_mult, minimum_mult)
         print(f'  Fee multiplier: {fee_mult}')
 
-def send_xym(amount):
+def send_xym(amount, from_key_pair, to_key_pair):
     global timestamp
     global fee_mult
     # Build the transaction
     transaction = facade.transaction_factory.create({
         'type': 'transfer_transaction_v1',
-        'signer_public_key': treasury_key_pair.public_key,
+        'signer_public_key': from_key_pair.public_key,
         'deadline': timestamp.add_hours(2).timestamp,
-        'recipient_address': PLAYER_ADDRESS,
+        'recipient_address': facade.network.public_key_to_address(to_key_pair.public_key),
         'mosaics': [{
             'mosaic_id': generate_mosaic_alias_id('symbol.xym'),
             'amount': amount * 1_000_000
@@ -66,7 +67,7 @@ def send_xym(amount):
     timestamp = timestamp.add_seconds(1) # So next tx does not have the same hash
 
     # Sign transaction and generate final payload
-    signature = facade.sign_transaction(treasury_key_pair, transaction)
+    signature = facade.sign_transaction(from_key_pair, transaction)
     json_payload = facade.transaction_factory.attach_signature(
         transaction, signature)
 
@@ -96,7 +97,7 @@ def send_xym(amount):
                 print(f"  Transaction status: {status['group']}")
                 if status['group'] == 'confirmed':
                     print(f'Transaction confirmed in {attempt} seconds')
-                    break
+                    return True
                 if status['group'] == 'failed':
                     print(f"Transaction failed: {status['code']}")
                     break
@@ -104,9 +105,16 @@ def send_xym(amount):
             print(f'  Transaction status: unknown | Cause: ({e.msg})')
     else:
         print('Confirmation took too long.')
+    return False
+
+def send_xym_to_player(amount):
+    return send_xym(amount, treasury_key_pair, player_key_pair)
+
+def send_xym_to_treasury(amount):
+    return send_xym(amount, player_key_pair, treasury_key_pair)
 
 def fetch_balance():
-    balance_path = f'/accounts/{PLAYER_ADDRESS}'
+    balance_path = f'/accounts/{player_key_pair.public_key}'
     print(f'Fetching player balance from {balance_path}')
     with urllib.request.urlopen(f'{NODE_URL}{balance_path}') as response:
         response_json = json.loads(response.read().decode())
@@ -140,8 +148,17 @@ def process_line(line):
     if match:
         count = int(match.group(1))
         print(f"Requesting {count} coins")
-        send_xym(count)
+        send_xym_to_player(count)
         send_int(0, 4) # Send confirmation command
+        return
+    match = re.match(r"Pay (\d+) coins to open door (\d+)", line)
+    if match:
+        count = int(match.group(1))
+        door_id = int(match.group(2))
+        print(f"Paying {count} coins to open door {door_id}")
+        send_xym_to_treasury(count)
+        send_int(2, 4) # Send confirmation command
+        send_int(door_id, 8)
         return
 
 def monitor_log_file(file_path):
