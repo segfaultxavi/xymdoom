@@ -14,4 +14,23 @@ class XYMEventHandler : EventHandler {
   override void PlayerEntered (PlayerEvent e) {
     players[e.PlayerNumber].mo.GiveInventory("XYMCoin", 0);
   }
+
+  // Manual handling of XYM doors
+  override void WorldLineActivated (WorldEvent e) {
+    if (e.ActivationType != SPAC_Use) return;
+    let activator = e.Thing;
+    let line = e.ActivatedLine;
+    if (line.special == 80 && line.args[0] == 1) {
+      // Linedefs using the dummy script 1 are XYM doors
+      let price = line.args[2];
+      let xymcoin = XYMCoin(activator.FindInventory("XYMCoin"));
+      if (xymcoin == null) return;
+      if (xymcoin.mAmountConfirmed < price) {
+        activator.A_Log("Insufficient balance");
+        return;
+      }
+      // Call script 2 which will open the door (and leave it open)
+      ACS_Execute(2, 0, line.backsector.GetTag(0), 0, 0);
+    }
+  }
 }
